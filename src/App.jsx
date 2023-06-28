@@ -3,55 +3,63 @@ import { useImmer } from "use-immer";
 import * as EmailValidator from "email-validator";
 import { passwordStrength } from "check-password-strength";
 
+const initialState = {
+  email: " ",
+  password: " ",
+  confirmationPassword: " ",
+  showPassword: false,
+  showInvalidEmail: false,
+  isPasswordShort: false,
+  passwordMatch: false,
+  passwordStrength: {
+    color: " ",
+    value: " ",
+  },
+};
 function App() {
-  const [state, setState] = useImmer({
-    email: "",
-    password: "",
-    confirmationPassword: "",
-    showPassword: false,
-    showInvalidEmail: false,
-    isPasswordShort: false,
-    passwordStrength: {
-      color: '',
-      value: '',
-    }
-  });
+  const [state, setState] = useImmer(initialState);
 
   const validate = (
-    state.email 
+    state.email
     && !state.showInvalidEmail
     && state.password.length > 8
-    && ['Medium', 'Strong' ].includes(state.passwordStrength.value)
+    && ["Medium", "Strong"].includes(state.passwordStrength.value)
     && state.password === state.confirmationPassword
-);
+  );
+
   return (
     <div id="app">
       <form id="my-form" className="shadow">
         <h4>Form Validator</h4>
 
-        <div className="mb-4">
-          <label>Email</label>
-          <input
-            className="form-control"
-            type="text"
-            data-rules="required|digits:5|min:5"
-            placeHolder="Please enter your email"
-            value={state?.user || ""}
-            onChange={(event) => {
-              setState((draft) => {
-                draft.user = event.target.value;
-              });
-            }}
-            onBlur={() => {
-              setState((draft) => {
-                draft.showInvalidEmail = !EmailValidator.validate(state?.email);
-              });
-            }}
-          />
-          {state.showInvalidEmail && (
-            <p className="validator-err">Please use valid Email Address</p>
-          )}
-        </div>
+        <div className="mb-4"></div>
+        <div
+          className="mb-4"
+          style={{
+            position: "relative",
+          }}
+        ></div>
+        <label>Email</label>
+        <input
+          className="form-control"
+          type="text"
+          data-rules="required|digits:5|min:5"
+          placeHolder="Please enter your email"
+          value={state?.email || ""}
+          onChange={(event) => {
+            setState((draft) => {
+              draft.email = event.target.value;
+            });
+          }}
+          onBlur={() => {
+            setState((draft) => {
+              draft.showInvalidEmail = !EmailValidator.validate(state?.email);
+            });
+          }}
+        />
+        {state.showInvalidEmail && (
+          <p className="validator-err">Please use valid Email Address</p>
+        )}
         <div
           className="mb-4"
           style={{
@@ -72,8 +80,9 @@ function App() {
                   draft.confirmationPassword = event.target.value;
                 }
                 if (event.target.value.length > 8) {
-                  const passwordStrengthValue =
-                    passwordStrength(event.target.value).value
+                  const passwordStrengthValue = passwordStrength(
+                    event.target.value
+                  ).value;
                   draft.passwordStrength.value = passwordStrengthValue;
                   switch (passwordStrengthValue) {
                     case "Too Weak":
@@ -102,14 +111,12 @@ function App() {
               });
             }}
           />
-          {
-            state.isPasswordShort && 
+          {state.isPasswordShort && (
             <p className="validator-err">
               Password requires more than 8 characters
             </p>
-          }
-          {
-            state.password && 
+          )}
+          {state.password && (
             <button
               style={{
                 position: "absolute",
@@ -124,22 +131,23 @@ function App() {
               type="button"
               onClick={() => {
                 setState((draft) => {
-                  draft.showPassword = !state.showPassword;
-                  if (state.showPassword) {
-                    draft.confirmationPassword = state.password
+                  draft.showPassword = !draft.showPassword;
+                  if (!state.showPassword) {
+                    draft.confirmationPassword = state.password;
+                    draft.passwordMatch = true;
                   } else {
-                    draft.confirmationPassword = ""
+                    draft.passwordMatch = false;
+                    draft.confirmationPassword = "";
                   }
                 });
               }}
             >
               eye
             </button>
-          }
+          )}
         </div>
-        {
-          // !state.showPassword
-          && <div className="mb-4">
+        {!state.showPassword && (
+          <div className="mb-4">
             <label>Password Confirmation</label>
             <input
               className="form-control"
@@ -149,30 +157,47 @@ function App() {
               onChange={(event) => {
                 setState((draft) => {
                   draft.confirmationPassword = event.target.value;
+                  draft.passwordMatch = event.target.value === state.password;
                 });
               }}
             />
           </div>
-        }
-        {
-          state.passwordStrength.value
-          && <div
+        )}
+        {!state.passwordMatch && state.confirmationPassword && (
+          <p className="validator-err">
+            Confirmation password does not match original password
+          </p>
+        )}
+
+        {state.passwordStrength.value && (
+          <div
             className="mb-4"
             style={{
               position: "relative",
-              color: state.passwordStrength.color
+              color: state.passwordStrength.color,
             }}
-            >
-              {state.passwordStrength.value}
+          >
+            {state.passwordStrength.value}
           </div>
-        }
+        )}
+        <ul className= "information">
+          <li>password must be at least 8 characters</li>
+          <li>password must be at least 1 number</li>
+          <li>password must be at least 1 capital character</li>
+          <li>password must be at least 1 symbol</li>
+        </ul>
         <button
-          disabled={
-           validate
-          }
+          disabled={validate}
           style={{
             backgroundColor: validate ? " " : "gray",
           }}
+          onClick={() => {
+            alert(
+              "Congratulations your form is validated, and we are creating a user for your account!"
+            );
+            setState(initialState);
+          }}
+          type="button"
         >
           Create Email
         </button>
